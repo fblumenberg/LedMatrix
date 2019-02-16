@@ -130,7 +130,6 @@ void setup()
 
     connectToWifi(wifiManager, true);
 
-    // connectToWiFi();
     setupOTA();
     delay(10);
 
