@@ -1,0 +1,9 @@
+{
+    "terminal.integrated.env.osx": {
+        "PATH": "/Users/frankblumenberg/.platformio/penv/bin:/Users/frankblumenberg/.platformio/penv:/Library/Frameworks/Python.framework/Versions/3.7/bin:/Library/Frameworks/Python.framework/Versions/2.7/bin:/Users/frankblumenberg/Develop/Java/apache-maven-3.3.1/bin:/Users/frankblumenberg/Develop/grails/bin:/Users/frankblumenberg/Develop/go/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/go/bin:/Applications/Wireshark.app/Contents/MacOS",
+        "PLATFORMIO_CALLER": "vscode"
+    },
+    "files.associations": {
+        "functional": "cpp"
+    }
+}
