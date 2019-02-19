@@ -12,6 +12,10 @@
 #include "Config.h"
 #include "Ota.h"
 #include "Mqtt.h"
+#include "LedMatrix.h"
+
+#include "Fire.h"
+
 //for LED status
 #include <Ticker.h>
 Ticker ticker;
@@ -23,8 +27,9 @@ PubSubClient client(espClient);
 
 Mqtt mqtt(client, config);
 
-// static void connectToWiFi();
-static void mqttReconnect();
+LedMatrix matrix;
+
+Fire fire(matrix);
 
 static bool shouldSaveConfig = false;
 
@@ -33,6 +38,7 @@ void tick()
     //toggle state
     int state = digitalRead(LED_BUILTIN); // get the current state of GPIO1 pin
     digitalWrite(LED_BUILTIN, !state);    // set pin to the opposite state
+    matrix.ToggleStatus();
 }
 
 void configModeCallback(WiFiManager *myWiFiManager)
@@ -40,6 +46,7 @@ void configModeCallback(WiFiManager *myWiFiManager)
     Serial.println("Entered config mode");
     Serial.println(WiFi.softAPIP());
     Serial.println(myWiFiManager->getConfigPortalSSID());
+    matrix.ShowWifi();
 }
 
 //callback notifying us of the need to save config
@@ -63,7 +70,7 @@ void connectToWifi(WiFiManager &wifiManager, bool autoConnect)
     WiFiManagerParameter custom_mqtt_server("server", "mqtt server", config.mqttServer.c_str(), 40);
     WiFiManagerParameter custom_mqtt_port("port", "mqtt port", String(config.mqttPort).c_str(), 6);
 
-    //wifiManager.resetSettings();
+    // wifiManager.resetSettings();
     wifiManager.setAPCallback(configModeCallback);
     wifiManager.setSaveConfigCallback(saveConfigCallback);
 
@@ -95,8 +102,9 @@ void connectToWifi(WiFiManager &wifiManager, bool autoConnect)
     }
 
     ticker.detach();
-    //keep LED on
     digitalWrite(LED_BUILTIN, HIGH);
+    matrix.StatusOff();
+
 }
 
 void setup()
@@ -105,7 +113,7 @@ void setup()
     Serial.begin(9600);
 
     Serial.println("\n Starting");
-    Serial.println("OTA Base!");
+    Serial.println("LED Matrix!");
 
     //read configuration from FS json
     Serial.println("mounting FS...");
@@ -115,6 +123,8 @@ void setup()
         Serial.println("Failed to mount file system");
         return;
     }
+
+    matrix.Setup();
 
     if (!loadConfig())
     {
@@ -134,6 +144,8 @@ void setup()
     delay(10);
 
     pinMode(TRIGGER_PIN, INPUT);
+
+    fire.Setup();
 }
 
 void loop()
@@ -151,5 +163,8 @@ void loop()
     }
 
     mqtt.loop();
-    delay(100);
+    fire.Loop();
+    matrix.Show();
+
+    delay(10);
 }
