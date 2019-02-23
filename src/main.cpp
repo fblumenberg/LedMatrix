@@ -7,14 +7,17 @@
 #include <ESP8266WebServer.h> //Local WebServer used to serve the configuration portal
 #include <WiFiManager.h>      //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 
+#define MQTT_MAX_PACKET_SIZE 512
 #include <PubSubClient.h>
+
+#include <ArduinoJson.h>
 
 #include "Config.h"
 #include "Ota.h"
 #include "Mqtt.h"
 #include "LedMatrix.h"
 
-#include "Fire.h"
+#include "Patterns.h"
 
 //for LED status
 #include <Ticker.h>
@@ -27,9 +30,7 @@ PubSubClient client(espClient);
 
 Mqtt mqtt(client, config);
 
-LedMatrix matrix;
-
-Fire fire(matrix);
+Patterns patterns;
 
 static bool shouldSaveConfig = false;
 
@@ -104,7 +105,63 @@ void connectToWifi(WiFiManager &wifiManager, bool autoConnect)
     ticker.detach();
     digitalWrite(LED_BUILTIN, HIGH);
     matrix.StatusOff();
+}
 
+void mqttPattern(char *topic, byte *payload, unsigned int length)
+{
+    Serial.printf("New pattern %s - %d\n", topic, length);
+
+    StaticJsonBuffer<200> jsonBuffer;
+
+    JsonObject &root = jsonBuffer.parseObject(payload);
+
+    Serial.printf("Parsed, %d\n", root.containsKey("pattern"));
+
+    if (root.containsKey("pattern") && root["pattern"].is<const char *>())
+    {
+        const char *pattern = root["pattern"];
+        Serial.printf("Set pattern %s\n", pattern);
+        patterns.SetPattern(pattern);
+    }
+    else
+    {
+        Serial.println("The given pattern is not a string");
+    }
+}
+
+void publishInfo()
+{
+    StaticJsonBuffer<300> JSONbuffer;
+    JsonObject &JSONencoder = JSONbuffer.createObject();
+
+    JsonArray &values = JSONencoder.createNestedArray("patterns");
+
+    patterns.GetList(values);
+
+    char JSONmessageBuffer[300];
+    int lenghtPretty = JSONencoder.prettyPrintTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+    Serial.println(JSONmessageBuffer);
+    Serial.println(lenghtPretty);
+    Serial.println("\nPretty JSON message from buffer: ");
+
+    const char* patternTopic = "Ledmatrix/info";
+    bool published= client.publish(patternTopic, JSONmessageBuffer, true);
+
+    Serial.printf("Published under %s - %d\n",patternTopic,published);
+}
+
+void mqttGetInfo(char *topic, byte *payload, unsigned int length){
+    publishInfo();
+}
+
+void mqttConnected()
+{
+    Serial.println("MQTT connected");
+
+    publishInfo();
+
+    mqtt.setTopicCallback("Ledmatrix/pattern", mqttPattern);
+    mqtt.setTopicCallback("Ledmatrix/getInfo", mqttGetInfo);
 }
 
 void setup()
@@ -145,9 +202,13 @@ void setup()
 
     pinMode(TRIGGER_PIN, INPUT);
 
-    fire.Setup();
+    mqtt.setConectCallback(mqttConnected);
+
+    patterns.Start();
+
 }
 
+unsigned long timer = millis();
 void loop()
 {
     loopOTA();
@@ -163,8 +224,12 @@ void loop()
     }
 
     mqtt.loop();
-    fire.Loop();
-    matrix.Show();
+    if (timer < millis())
+    {
+        unsigned int d = patterns.DrawFrame();
+        matrix.Show();
+        timer += d;
+    }
 
-    delay(10);
+    delay(1);
 }

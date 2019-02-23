@@ -12,13 +12,17 @@ static void mqttCallback(char *topic, byte *payload, unsigned int length)
 
 Mqtt::Mqtt(PubSubClient &client, Config &config)
 {
+    mqtt = this;
     this->_client = &client;
     this->_config = &config;
+    this->_connectCallback = NULL;
+    _client->setCallback(mqttCallback);
 }
 
 Mqtt &Mqtt::setTopicCallback(const char *topic, MQTT_CALLBACK_SIGNATURE)
 {
     _cbMap.insert(std::make_pair(topic, callback));
+    _client->subscribe(topic);
     return *this;
 }
 
@@ -52,6 +56,9 @@ void Mqtt::reconnect()
 
             // Once connected, publish an announcement...
             _client->publish("clients", _config->mqttClientName.c_str());
+
+            if (_connectCallback)
+                _connectCallback();
         }
         else
         {
@@ -73,6 +80,8 @@ void Mqtt::reconnect()
 
 void Mqtt::callback(char *topic, byte *payload, unsigned int length)
 {
+    Serial.print("MqttCB ");
+    Serial.println(topic);
     if (_cbMap.find(topic) != _cbMap.end())
     {
         _cbMap[topic](topic, payload, length);

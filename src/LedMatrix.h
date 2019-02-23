@@ -3,9 +3,18 @@
 #include <NeoPixelBus.h>
 #include <NeoPixelAnimator.h>
 
-#define M_WIDTH 10  // matrix width
-#define M_HEIGHT 10 // matrix height
-#define NUM_LEDS 100
+const int MATRIX_WIDTH = 10;
+const int MATRIX_HEIGHT = 10;
+
+const int MATRIX_CENTER_X = MATRIX_WIDTH / 2;
+const int MATRIX_CENTER_Y = MATRIX_HEIGHT / 2;
+
+const uint16_t EXTERNAL_POWER_MIN = 500;
+
+const byte MATRIX_CENTRE_X = MATRIX_CENTER_X - 1;
+const byte MATRIX_CENTRE_Y = MATRIX_CENTER_Y - 1;
+
+const int NUM_LEDS = MATRIX_WIDTH * MATRIX_HEIGHT;
 
 extern RgbColor red;
 extern RgbColor green;
@@ -30,4 +39,38 @@ class LedMatrix
     void Show();
 
     void SetPixelColor(int16_t x, int16_t y, RgbColor color);
+
+    void FillScreen(RgbColor color);
+    void DimAll(byte value);
+
+    // All the caleidoscope functions work directly within the screenbuffer (leds array).
+    // Draw whatever you like in the area x(0-15) and y (0-15) and then copy it arround.
+
+    // rotates the first 16x16 quadrant 3 times onto a 32x32 (+90 degrees rotation for each one)
+    void Caleidoscope1();
+
+    // mirror the first 16x16 quadrant 3 times onto a 32x32
+    void Caleidoscope2();
+    // copy one diagonal triangle into the other one within a 16x16
+    void Caleidoscope3();
+
+    // copy one diagonal triangle into the other one within a 16x16 (90 degrees rotated compared to Caleidoscope3)
+    void Caleidoscope4();
+
+    // copy one diagonal triangle into the other one within a 8x8
+    void Caleidoscope5();
+
+    void Caleidoscope6();
+
+    // create a square twister to the left or counter-clockwise
+    // x and y for center, r for radius
+    void SpiralStream(int x, int y, int r, byte dimm);
+
+    // expand everything within a circle
+    void Expand(int centerX, int centerY, int radius, byte dimm);
+
+    RgbColor ColorFromCurrentPalette(uint8_t index, uint8_t brightness = 255);
 };
+
+// there is only one led matrix, so make it global
+extern LedMatrix matrix;

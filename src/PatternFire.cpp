@@ -1,10 +1,10 @@
 #include <Arduino.h>
 
 #include "LedMatrix.h"
-#include "Fire.h"
+#include "PatternFire.h"
 
 //these values are substracetd from the generated values to give a shape to the animation
-const unsigned char valueMask[M_WIDTH][M_HEIGHT] = {
+const unsigned char valueMask[MATRIX_WIDTH][MATRIX_HEIGHT] = {
     // { 8, 0, 0, 0, 0, 0, 0, 0, 0, 8},
     // {16, 0, 0, 0, 0, 0, 0, 0, 0, 16},
     {32, 0, 0, 0, 0, 0, 0, 0, 0, 32},
@@ -20,7 +20,7 @@ const unsigned char valueMask[M_WIDTH][M_HEIGHT] = {
 
 //these are the hues for the fire,
 //should be between 0 (red) to about 13 (yellow)
-const unsigned char hueMask[M_WIDTH][M_HEIGHT] = {
+const unsigned char hueMask[MATRIX_WIDTH][MATRIX_HEIGHT] = {
     {0, 2, 5, 10, 12, 12, 11, 8, 4, 1},
     {1, 4, 7, 9, 10, 10, 9, 8, 4, 1},
     {1, 4, 7, 9, 10, 10, 9, 8, 4, 1},
@@ -32,8 +32,8 @@ const unsigned char hueMask[M_WIDTH][M_HEIGHT] = {
     {0, 0, 1, 2, 3, 3, 2, 1, 0, 0},
     {0, 0, 0, 1, 1, 1, 1, 0, 0, 0}};
 
-unsigned char fireMatrix[M_WIDTH][M_HEIGHT];
-unsigned char line[M_WIDTH];
+unsigned char fireMatrix[MATRIX_WIDTH][MATRIX_HEIGHT];
+unsigned char line[MATRIX_WIDTH];
 int pcnt = 0;
 
 /**
@@ -41,7 +41,7 @@ int pcnt = 0;
  */
 void generateLine()
 {
-    for (unsigned char x = 0; x < M_HEIGHT; x++)
+    for (unsigned char x = 0; x < MATRIX_HEIGHT; x++)
     {
         line[x] = random(64, 255);
     }
@@ -53,15 +53,15 @@ void generateLine()
 void shiftUp()
 {
 
-    for (unsigned char y = M_WIDTH - 1; y > 0; y--)
+    for (unsigned char y = MATRIX_WIDTH - 1; y > 0; y--)
     {
-        for (unsigned char x = 0; x < M_HEIGHT; x++)
+        for (unsigned char x = 0; x < MATRIX_HEIGHT; x++)
         {
             fireMatrix[x][y] = fireMatrix[x][y - 1];
         }
     }
 
-    for (unsigned char x = 0; x < M_HEIGHT; x++)
+    for (unsigned char x = 0; x < MATRIX_HEIGHT; x++)
     {
         fireMatrix[x][0] = line[x];
     }
@@ -71,14 +71,14 @@ void shiftUp()
  * draw a frame, interpolating between 2 "key frames"
  * @param pcnt percentage of interpolation
  */
-void drawFrame(LedMatrix *_matrix, int pcnt)
+void _drawFrame(int pcnt)
 {
     int nextv;
 
     //each row interpolates with the one before it
-    for (unsigned char y = M_WIDTH - 1; y > 0; y--)
+    for (unsigned char y = MATRIX_WIDTH - 1; y > 0; y--)
     {
-        for (unsigned char x = 0; x < M_HEIGHT; x++)
+        for (unsigned char x = 0; x < MATRIX_HEIGHT; x++)
         {
 
             int h = hueMask[y][x];
@@ -92,12 +92,12 @@ void drawFrame(LedMatrix *_matrix, int pcnt)
                 (float)(s / 256.0),
                 (float)(v / 256.0));
 
-            _matrix->SetPixelColor(x, y, colorHsb);
+            matrix.SetPixelColor(x, y, colorHsb);
         }
     }
 
     //first row interpolates with the "next" line
-    for (unsigned char x = 0; x < M_HEIGHT; x++)
+    for (unsigned char x = 0; x < MATRIX_HEIGHT; x++)
     {
         int h = hueMask[0][x];
         int s = 255;
@@ -108,7 +108,7 @@ void drawFrame(LedMatrix *_matrix, int pcnt)
             (float)(s / 256.0),
             (float)(v / 256.0));
 
-        _matrix->SetPixelColor(x, 0, colorHsb);
+        matrix.SetPixelColor(x, 0, colorHsb);
     }
 }
 
@@ -131,28 +131,28 @@ void SetRandomSeed()
     randomSeed(seed);
 }
 
-Fire::Fire(LedMatrix &fireMatrix)
+Fire::Fire()
 {
-    _matrix = &fireMatrix;
+    name = (char *)"Fire";
 }
 
-void Fire::Setup()
+void Fire::Start()
 {
     SetRandomSeed();
 
     generateLine();
 
     //init all pixels to zero
-    for (unsigned char y = 0; y < M_WIDTH; y++)
+    for (unsigned char y = 0; y < MATRIX_WIDTH; y++)
     {
-        for (unsigned char x = 0; x < M_HEIGHT; x++)
+        for (unsigned char x = 0; x < MATRIX_HEIGHT; x++)
         {
             fireMatrix[x][y] = 0;
         }
     }
 }
 
-void Fire::Loop()
+unsigned int Fire::DrawFrame()
 {
     if (pcnt >= 100)
     {
@@ -160,6 +160,8 @@ void Fire::Loop()
         generateLine();
         pcnt = 0;
     }
-    drawFrame(_matrix, pcnt);
+    _drawFrame(pcnt);
     pcnt += 30;
+
+    return 10;
 }
