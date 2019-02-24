@@ -1,0 +1,594 @@
+[
+    {
+        "id": "b9677de1.cf1b1",
+        "type": "tab",
+        "label": "LedMatrix",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "2f1110bb.6b4498",
+        "type": "mqtt in",
+        "z": "b9677de1.cf1b1",
+        "name": "Patterns",
+        "topic": "Ledmatrix/info",
+        "qos": "2",
+        "broker": "2aa37912.8efef6",
+        "x": 103.5,
+        "y": 179,
+        "wires": [
+            [
+                "6646e794.849838"
+            ]
+        ]
+    },
+    {
+        "id": "f941a212.2d0b7",
+        "type": "debug",
+        "z": "b9677de1.cf1b1",
+        "name": "Selected from Dropdown",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "x": 1147.5,
+        "y": 132,
+        "wires": []
+    },
+    {
+        "id": "cdcb78e0.e8d37",
+        "type": "mqtt out",
+        "z": "b9677de1.cf1b1",
+        "name": "",
+        "topic": "Ledmatrix/pattern",
+        "qos": "0",
+        "retain": "true",
+        "broker": "2aa37912.8efef6",
+        "x": 1251.5,
+        "y": 295,
+        "wires": []
+    },
+    {
+        "id": "ba853324.9c8c58",
+        "type": "ui_dropdown",
+        "z": "b9677de1.cf1b1",
+        "name": "",
+        "label": "Patterns",
+        "tooltip": "",
+        "place": "Select option",
+        "group": "434d3e1a.56f1d8",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "options": [
+            {
+                "label": "",
+                "value": "",
+                "type": "str"
+            }
+        ],
+        "payload": "",
+        "topic": "",
+        "x": 694.5,
+        "y": 83,
+        "wires": [
+            [
+                "607b381.9a6e1c8"
+            ]
+        ]
+    },
+    {
+        "id": "6646e794.849838",
+        "type": "json",
+        "z": "b9677de1.cf1b1",
+        "name": "Patternlist",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 275.5,
+        "y": 178,
+        "wires": [
+            [
+                "fa03f4f6.68505",
+                "babd5115.69da98"
+            ]
+        ]
+    },
+    {
+        "id": "fa03f4f6.68505",
+        "type": "function",
+        "z": "b9677de1.cf1b1",
+        "name": "List to options",
+        "func": "\nmsg.options=msg.payload.patterns;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 475.5,
+        "y": 127,
+        "wires": [
+            [
+                "ba853324.9c8c58"
+            ]
+        ]
+    },
+    {
+        "id": "607b381.9a6e1c8",
+        "type": "function",
+        "z": "b9677de1.cf1b1",
+        "name": "Pattern to JSON",
+        "func": "msg.payload = {\"pattern\":msg.payload};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 922.5,
+        "y": 87,
+        "wires": [
+            [
+                "f941a212.2d0b7",
+                "cdcb78e0.e8d37"
+            ]
+        ]
+    },
+    {
+        "id": "1fec7e24.1dd472",
+        "type": "debug",
+        "z": "b9677de1.cf1b1",
+        "name": "Selected from List",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "x": 988.5,
+        "y": 486,
+        "wires": []
+    },
+    {
+        "id": "125f5a90.9fa4fd",
+        "type": "http in",
+        "z": "b9677de1.cf1b1",
+        "name": "Activate Pattern",
+        "url": "/ledmatrix/pattern/:pattern",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 118.5,
+        "y": 613,
+        "wires": [
+            [
+                "770c33b0.8dcb8c",
+                "7b173278.e4dbec"
+            ]
+        ]
+    },
+    {
+        "id": "970eb8f9.53fbd",
+        "type": "debug",
+        "z": "b9677de1.cf1b1",
+        "name": "Acivate Pattern",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "x": 622.5,
+        "y": 502,
+        "wires": []
+    },
+    {
+        "id": "770c33b0.8dcb8c",
+        "type": "http response",
+        "z": "b9677de1.cf1b1",
+        "name": "",
+        "statusCode": "200",
+        "headers": {},
+        "x": 318.5,
+        "y": 615,
+        "wires": []
+    },
+    {
+        "id": "7b173278.e4dbec",
+        "type": "function",
+        "z": "b9677de1.cf1b1",
+        "name": "Extract Pattern",
+        "func": "msg.payload = msg.req.params.pattern\nnode.log(\"Something happened\",msg.paload);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 360.5,
+        "y": 441,
+        "wires": [
+            [
+                "970eb8f9.53fbd",
+                "607b381.9a6e1c8"
+            ]
+        ]
+    },
+    {
+        "id": "c51bccdc.787e4",
+        "type": "ui_list",
+        "z": "b9677de1.cf1b1",
+        "group": "434d3e1a.56f1d8",
+        "name": "List of Patterns",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "lineType": "two",
+        "actionType": "click",
+        "allowHTML": false,
+        "x": 644.5,
+        "y": 179,
+        "wires": [
+            [
+                "ac1204a7.89bb98"
+            ]
+        ]
+    },
+    {
+        "id": "babd5115.69da98",
+        "type": "function",
+        "z": "b9677de1.cf1b1",
+        "name": "List to UIList",
+        "func": "\nvar list = [];\n\nfor (var p of msg.payload.patterns) {\n  var o ={\n      title:p\n  };\n  list.push(o);\n}\n\nmsg.payload=list;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 463.5,
+        "y": 221,
+        "wires": [
+            [
+                "c51bccdc.787e4"
+            ]
+        ]
+    },
+    {
+        "id": "640e65e4.9f284c",
+        "type": "mqtt in",
+        "z": "b9677de1.cf1b1",
+        "name": "Current Patterns",
+        "topic": "Ledmatrix/pattern",
+        "qos": "0",
+        "broker": "2aa37912.8efef6",
+        "x": 122.5,
+        "y": 35,
+        "wires": [
+            [
+                "dcef5472.461888"
+            ]
+        ]
+    },
+    {
+        "id": "80e53cb1.e2994",
+        "type": "debug",
+        "z": "b9677de1.cf1b1",
+        "name": "Current pattern",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "x": 596.5,
+        "y": 24,
+        "wires": []
+    },
+    {
+        "id": "dcef5472.461888",
+        "type": "json",
+        "z": "b9677de1.cf1b1",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 294.5,
+        "y": 35,
+        "wires": [
+            [
+                "80e53cb1.e2994",
+                "30f8aea0.ac602a"
+            ]
+        ]
+    },
+    {
+        "id": "ac1204a7.89bb98",
+        "type": "function",
+        "z": "b9677de1.cf1b1",
+        "name": "Title to Pattern",
+        "func": "msg.payload = {\"pattern\":msg.payload.title};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 891.5,
+        "y": 314,
+        "wires": [
+            [
+                "1fec7e24.1dd472",
+                "cdcb78e0.e8d37"
+            ]
+        ]
+    },
+    {
+        "id": "30f8aea0.ac602a",
+        "type": "function",
+        "z": "b9677de1.cf1b1",
+        "name": "Extract current Pattern",
+        "func": "    msg.payload = msg.payload.pattern;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 492.5,
+        "y": 67,
+        "wires": [
+            [
+                "ba853324.9c8c58"
+            ]
+        ]
+    },
+    {
+        "id": "83ad5446.6b1a88",
+        "type": "ui_switch",
+        "z": "b9677de1.cf1b1",
+        "name": "OnOff",
+        "label": "On / Off",
+        "tooltip": "",
+        "group": "c8aa4399.6f769",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "decouple": "true",
+        "topic": "",
+        "style": "",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "x": 664.5,
+        "y": 710,
+        "wires": [
+            [
+                "15132a7b.0bf726"
+            ]
+        ]
+    },
+    {
+        "id": "b4074cc2.a76d4",
+        "type": "ui_slider",
+        "z": "b9677de1.cf1b1",
+        "name": "Brightness",
+        "label": "Brightness",
+        "tooltip": "",
+        "group": "c8aa4399.6f769",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "outs": "all",
+        "topic": "",
+        "min": "10",
+        "max": "255",
+        "step": 1,
+        "x": 633.5,
+        "y": 813,
+        "wires": [
+            [
+                "34a67a98.e07036"
+            ]
+        ]
+    },
+    {
+        "id": "3e41d1bc.39625e",
+        "type": "mqtt in",
+        "z": "b9677de1.cf1b1",
+        "name": "State",
+        "topic": "Ledmatrix/state",
+        "qos": "2",
+        "broker": "2aa37912.8efef6",
+        "x": 102.5,
+        "y": 720,
+        "wires": [
+            [
+                "db59bbba.61ec28"
+            ]
+        ]
+    },
+    {
+        "id": "271da111.138b5e",
+        "type": "debug",
+        "z": "b9677de1.cf1b1",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 371.5,
+        "y": 973,
+        "wires": []
+    },
+    {
+        "id": "db59bbba.61ec28",
+        "type": "json",
+        "z": "b9677de1.cf1b1",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 242.5,
+        "y": 714,
+        "wires": [
+            [
+                "25bc9a60.1bc1f6"
+            ]
+        ]
+    },
+    {
+        "id": "25bc9a60.1bc1f6",
+        "type": "function",
+        "z": "b9677de1.cf1b1",
+        "name": "Extract State",
+        "func": "msg.payload=msg.payload.state;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 439.5,
+        "y": 713,
+        "wires": [
+            [
+                "83ad5446.6b1a88"
+            ]
+        ]
+    },
+    {
+        "id": "34c66968.55c1be",
+        "type": "mqtt out",
+        "z": "b9677de1.cf1b1",
+        "name": "Set State",
+        "topic": "Ledmatrix/state",
+        "qos": "2",
+        "retain": "",
+        "broker": "2aa37912.8efef6",
+        "x": 1098.5,
+        "y": 702,
+        "wires": []
+    },
+    {
+        "id": "15132a7b.0bf726",
+        "type": "function",
+        "z": "b9677de1.cf1b1",
+        "name": "Build State JSON",
+        "func": "msg.payload={\"state\":msg.payload};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 853.5,
+        "y": 703,
+        "wires": [
+            [
+                "34c66968.55c1be"
+            ]
+        ]
+    },
+    {
+        "id": "2bf8454a.d22b82",
+        "type": "mqtt in",
+        "z": "b9677de1.cf1b1",
+        "name": "Brightness",
+        "topic": "Ledmatrix/brightness",
+        "qos": "2",
+        "broker": "2aa37912.8efef6",
+        "x": 105.5,
+        "y": 836,
+        "wires": [
+            [
+                "f482554d.80f5f"
+            ]
+        ]
+    },
+    {
+        "id": "9839f4e.667ad88",
+        "type": "mqtt out",
+        "z": "b9677de1.cf1b1",
+        "name": "Brightness",
+        "topic": "Ledmatrix/brightness",
+        "qos": "",
+        "retain": "",
+        "broker": "2aa37912.8efef6",
+        "x": 1102.5,
+        "y": 875,
+        "wires": []
+    },
+    {
+        "id": "33a1d31c.35b164",
+        "type": "function",
+        "z": "b9677de1.cf1b1",
+        "name": "Extract Data",
+        "func": "msg.payload=msg.payload.value\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 413.5,
+        "y": 810,
+        "wires": [
+            [
+                "b4074cc2.a76d4"
+            ]
+        ]
+    },
+    {
+        "id": "34a67a98.e07036",
+        "type": "function",
+        "z": "b9677de1.cf1b1",
+        "name": "Build JSON",
+        "func": "msg.payload={\"value\":msg.payload};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 892.5,
+        "y": 841,
+        "wires": [
+            [
+                "9839f4e.667ad88"
+            ]
+        ]
+    },
+    {
+        "id": "f482554d.80f5f",
+        "type": "json",
+        "z": "b9677de1.cf1b1",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 274.5,
+        "y": 832,
+        "wires": [
+            [
+                "33a1d31c.35b164"
+            ]
+        ]
+    },
+    {
+        "id": "2aa37912.8efef6",
+        "type": "mqtt-broker",
+        "z": "",
+        "broker": "192.168.178.33",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "434d3e1a.56f1d8",
+        "type": "ui_group",
+        "z": "",
+        "name": "Pattern",
+        "tab": "959e0507.e8b4",
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "c8aa4399.6f769",
+        "type": "ui_group",
+        "z": "",
+        "name": "Options",
+        "tab": "959e0507.e8b4",
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "959e0507.e8b4",
+        "type": "ui_tab",
+        "z": "",
+        "name": "LedMatrix",
+        "icon": "dashboard",
+        "order": 2,
+        "disabled": false,
+        "hidden": false
+    }
+]
