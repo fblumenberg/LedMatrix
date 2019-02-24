@@ -17,6 +17,8 @@ class Drawable
         return 0;
     };
 
-   virtual void Start(){};
+   virtual void Start(){
+        matrix.FillScreen(RgbColor(Colors::Black));
+   };
    virtual void Stop(){};
 };

@@ -35,11 +35,11 @@ class PatternIncrementalDrift2 : public Drawable {
       name = (char *)"Incremental Drift Rose";
     }
 
-    unsigned int drawFrame() {
-      uint8_t dim = beatsin8(2, 5, 15);
+    unsigned int DrawFrame() {
+      uint8_t dim = beatsin8(2, 170, 250);
       matrix.DimAll(dim);
 
-      for (uint8_t i = 0; i < 32; i++)
+      for (uint8_t i = 0; i < 20; i++)
       {
         RgbColor color;
 
@@ -53,9 +53,9 @@ class PatternIncrementalDrift2 : public Drawable {
         }
         else
         {
-          x = beatsin8((32 - i) * 2, MATRIX_WIDTH - i, i + 1);
-          y = beatcos8((32 - i) * 2, MATRIX_HEIGHT - i, i + 1);
-          color = matrix.ColorFromCurrentPalette((31 - i) * 14);
+          x = beatsin8((20 - i) * 2, MATRIX_WIDTH - i, i + 1);
+          y = beatcos8((20 - i) * 2, MATRIX_HEIGHT - i, i + 1);
+          color = matrix.ColorFromCurrentPalette((19 - i) * 14);
         }
 
         matrix.SetPixelColor(x, y, color);

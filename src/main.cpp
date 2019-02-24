@@ -107,6 +107,71 @@ void connectToWifi(WiFiManager &wifiManager, bool autoConnect)
     matrix.StatusOff();
 }
 
+unsigned long timer = millis();
+
+bool state = true;
+
+void mqttState(char *topic, byte *payload, unsigned int length)
+{
+    Serial.printf("New state %s - %d\n", topic, length);
+
+    StaticJsonBuffer<200> jsonBuffer;
+
+    JsonObject &root = jsonBuffer.parseObject(payload);
+
+    Serial.printf("Parsed, %d\n", root.containsKey("state"));
+
+    if (root.containsKey("state") && root["state"].is<bool>())
+    {
+        state = root["state"];
+
+        Serial.printf("Parsed state, %d\n", state);
+
+        if (state)
+        {
+            timer = millis();
+            patterns.Start();
+        }
+        else
+        {
+            patterns.Stop();
+        }
+        matrix.FillScreen(black);
+        matrix.Show();
+        delay(1);
+    }
+    else
+    {
+        Serial.println("The given pattern is not a string");
+    }
+}
+
+void mqttBrightness(char *topic, byte *payload, unsigned int length)
+{
+    Serial.printf("New brightness %s - %d\n", topic, length);
+
+    StaticJsonBuffer<200> jsonBuffer;
+
+    JsonObject &root = jsonBuffer.parseObject(payload);
+
+    Serial.printf("Parsed, %d\n", root.containsKey("value"));
+
+    if (root.containsKey("value") && root["value"].is<int>())
+    {
+        int value = root["value"];
+
+        Serial.printf("Parsed value, %d\n", value);
+
+        matrix.SetBrightness((uint8_t)value);
+        matrix.Show();
+        delay(1);
+    }
+    else
+    {
+        Serial.println("The given pattern is not a string");
+    }
+}
+
 void mqttPattern(char *topic, byte *payload, unsigned int length)
 {
     Serial.printf("New pattern %s - %d\n", topic, length);
@@ -122,6 +187,9 @@ void mqttPattern(char *topic, byte *payload, unsigned int length)
         const char *pattern = root["pattern"];
         Serial.printf("Set pattern %s\n", pattern);
         patterns.SetPattern(pattern);
+        timer = millis();
+
+        delay(1);
     }
     else
     {
@@ -131,26 +199,27 @@ void mqttPattern(char *topic, byte *payload, unsigned int length)
 
 void publishInfo()
 {
-    StaticJsonBuffer<300> JSONbuffer;
+    StaticJsonBuffer<500> JSONbuffer;
     JsonObject &JSONencoder = JSONbuffer.createObject();
 
     JsonArray &values = JSONencoder.createNestedArray("patterns");
 
     patterns.GetList(values);
 
-    char JSONmessageBuffer[300];
+    char JSONmessageBuffer[500];
     int lenghtPretty = JSONencoder.prettyPrintTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
     Serial.println(JSONmessageBuffer);
     Serial.println(lenghtPretty);
     Serial.println("\nPretty JSON message from buffer: ");
 
-    const char* patternTopic = "Ledmatrix/info";
-    bool published= client.publish(patternTopic, JSONmessageBuffer, true);
+    const char *patternTopic = "Ledmatrix/info";
+    bool published = client.publish(patternTopic, JSONmessageBuffer, true);
 
-    Serial.printf("Published under %s - %d\n",patternTopic,published);
+    Serial.printf("Published under %s - %d\n", patternTopic, published);
 }
 
-void mqttGetInfo(char *topic, byte *payload, unsigned int length){
+void mqttGetInfo(char *topic, byte *payload, unsigned int length)
+{
     publishInfo();
 }
 
@@ -162,12 +231,14 @@ void mqttConnected()
 
     mqtt.setTopicCallback("Ledmatrix/pattern", mqttPattern);
     mqtt.setTopicCallback("Ledmatrix/getInfo", mqttGetInfo);
+    mqtt.setTopicCallback("Ledmatrix/state", mqttState);
+    mqtt.setTopicCallback("Ledmatrix/brightness", mqttBrightness);
 }
 
 void setup()
 {
     // put your setup code here, to run once:
-    Serial.begin(9600);
+    Serial.begin(115200);
 
     Serial.println("\n Starting");
     Serial.println("LED Matrix!");
@@ -205,10 +276,8 @@ void setup()
     mqtt.setConectCallback(mqttConnected);
 
     patterns.Start();
-
 }
 
-unsigned long timer = millis();
 void loop()
 {
     loopOTA();
@@ -224,11 +293,15 @@ void loop()
     }
 
     mqtt.loop();
-    if (timer < millis())
+
+    if (state)
     {
-        unsigned int d = patterns.DrawFrame();
-        matrix.Show();
-        timer += d;
+        if (timer < millis())
+        {
+            unsigned int d = patterns.DrawFrame();
+            matrix.Show();
+            timer += d;
+        }
     }
 
     delay(1);

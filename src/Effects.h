@@ -75,3 +75,25 @@ uint8_t noisesmoothing;
       }
     }
   }
+
+  // Oscillators and Emitters
+
+  // the oscillators: linear ramps 0-255
+  byte osci[6];
+
+  // sin8(osci) swinging between 0 to MATRIX_WIDTH - 1
+  byte p[6];
+
+  // set the speeds (and by that ratios) of the oscillators here
+  void MoveOscillators() {
+    osci[0] = osci[0] + 5;
+    osci[1] = osci[1] + 2;
+    osci[2] = osci[2] + 3;
+    osci[3] = osci[3] + 4;
+    osci[4] = osci[4] + 1;
+    if (osci[4] % 2 == 0)
+      osci[5] = osci[5] + 1; // .5
+    for (int i = 0; i < 4; i++) {
+      p[i] = map8(sin8(osci[i]), 0, MATRIX_WIDTH - 1); //why? to keep the result in the range of 0-MATRIX_WIDTH (matrix size)
+    }
+  }

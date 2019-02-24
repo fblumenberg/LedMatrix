@@ -20,7 +20,7 @@ public:
             for (int y = 0; y < MATRIX_HEIGHT; y++) {
                 int16_t v = 0;
                 uint8_t wibble = sin8(time);
-                v += sin16(x * wibble * 2 + time);
+                v += sin16(x * wibble  + time);
                 v += cos16(y * (128 - wibble) * 2 + time);
                 v += sin16(y * x * cos8(-time) / 2);
 

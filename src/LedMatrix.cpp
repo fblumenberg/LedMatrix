@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <NeoPixelBus.h>
+#include <NeoPixelBrightnessBus.h>
 #include <NeoPixelAnimator.h>
 #include "FS.h"
 
@@ -20,29 +20,7 @@ RgbColor blue(0, 0, colorSaturation);
 RgbColor white(colorSaturation);
 RgbColor black(0);
 
-static Colors::HTMLColorCode palette[16] = {
-
-    Colors::MidnightBlue,
-    Colors::DarkBlue,
-    Colors::MidnightBlue,
-    Colors::Navy,
-
-    Colors::DarkBlue,
-    Colors::MediumBlue,
-    Colors::SeaGreen,
-    Colors::Teal,
-
-    Colors::CadetBlue,
-    Colors::Blue,
-    Colors::DarkCyan,
-    Colors::CornflowerBlue,
-
-    Colors::Aquamarine,
-    Colors::SeaGreen,
-    Colors::Aqua,
-    Colors::LightSkyBlue};
-
-NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> strip(PixelCount, 3);
+NeoPixelBrightnessBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> strip(PixelCount, 3);
 NeoPixelAnimator animations(PixelCount, NEO_CENTISECONDS);
 NeoTopology<ColumnMajorLayout> topo(10, 10);
 
@@ -104,6 +82,11 @@ void LedMatrix::Show()
     strip.Show();
 }
 
+void LedMatrix::SetBrightness(uint8_t value)
+{
+    strip.SetBrightness(value);
+}
+
 void LedMatrix::ToggleStatus()
 {
     status = !status;
@@ -127,16 +110,36 @@ void LedMatrix::DimAll(byte value)
 {
     for (int i = 0; i < NUM_LEDS; i++)
     {
-        RgbColor c = strip.GetPixelColor(i+1);
-
-        // CRGB c1 = CRGB(c.R,c.G,c.B);
-        // c1.nscale8(value);
-        // c.R=c1.r;
-        // c.G=c1.g;
-        // c.B=c1.b;
-        c.Darken(value);
+        RgbColor c = strip.GetPixelColor(i + 1);
+        nscale8x3(c.R, c.G, c.B, value);
+        //        c.Darken(value);
         strip.SetPixelColor(i + 1, c);
     }
+}
+
+void LedMatrix::SwapPixelColor(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
+{
+    strip.SwapPixelColor(XY(x1, y1), XY(x2, y2));
+}
+
+void LedMatrix::DimPixelColor(int16_t x, int16_t y, byte value)
+{
+    RgbColor c = strip.GetPixelColor(XY(x, y));
+    nscale8x3(c.R, c.G, c.B, value);
+    //        c.Darken(value);
+    strip.SetPixelColor(XY(x, y), c);
+}
+
+void LedMatrix::CopyPixelColor(int16_t xDst, int16_t yDst, int16_t xSrc, int16_t ySrc)
+{
+    RgbColor c = strip.GetPixelColor(XY(xSrc, ySrc));
+    strip.SetPixelColor(XY(xDst, yDst), c);
+}
+void LedMatrix::CopyPixelColor(int16_t xDst, int16_t yDst, int16_t xSrc, int16_t ySrc, uint8_t scale)
+{
+    RgbColor c = strip.GetPixelColor(XY(xSrc, ySrc));
+    nscale8x3(c.R, c.G, c.B, scale);
+    strip.SetPixelColor(XY(xDst, yDst), c);
 }
 
 void LedMatrix::FillScreen(RgbColor color)
@@ -174,9 +177,9 @@ void LedMatrix::Caleidoscope1()
     {
         for (int y = 0; y < MATRIX_CENTER_Y; y++)
         {
-            strip.SetPixelColor(XY(MATRIX_WIDTH - 1 - x, y), strip.GetPixelColor(XY(x, y)));
-            strip.SetPixelColor(XY(MATRIX_WIDTH - 1 - x, MATRIX_HEIGHT - 1 - y), strip.GetPixelColor(XY(x, y)));
-            strip.SetPixelColor(XY(x, MATRIX_HEIGHT - 1 - y), strip.GetPixelColor(XY(x, y)));
+            CopyPixelColor(MATRIX_WIDTH - 1 - x, y, x, y);
+            CopyPixelColor(MATRIX_WIDTH - 1 - x, MATRIX_HEIGHT - 1 - y, x, y);
+            CopyPixelColor(x, MATRIX_HEIGHT - 1 - y, x, y);
         }
     }
 }
@@ -188,9 +191,9 @@ void LedMatrix::Caleidoscope2()
     {
         for (int y = 0; y < MATRIX_CENTER_Y; y++)
         {
-            strip.SetPixelColor(XY(MATRIX_WIDTH - 1 - x, y), strip.GetPixelColor(XY(y, x)));
-            strip.SetPixelColor(XY(x, MATRIX_HEIGHT - 1 - y), strip.GetPixelColor(XY(y, x)));
-            strip.SetPixelColor(XY(MATRIX_WIDTH - 1 - x, MATRIX_HEIGHT - 1 - y), strip.GetPixelColor(XY(x, y)));
+            CopyPixelColor(MATRIX_WIDTH - 1 - x, y, y, x);
+            CopyPixelColor(x, MATRIX_HEIGHT - 1 - y, y, x);
+            CopyPixelColor(MATRIX_WIDTH - 1 - x, MATRIX_HEIGHT - 1 - y, x, y);
         }
     }
 }
@@ -202,7 +205,7 @@ void LedMatrix::Caleidoscope3()
     {
         for (int y = 0; y <= x; y++)
         {
-            strip.SetPixelColor(XY(x, y), strip.GetPixelColor(XY(y, x)));
+            CopyPixelColor(x, y, y, x);
         }
     }
 }
@@ -214,7 +217,7 @@ void LedMatrix::Caleidoscope4()
     {
         for (int y = 0; y <= MATRIX_CENTRE_Y - x; y++)
         {
-            strip.SetPixelColor(XY(MATRIX_CENTRE_Y - y, MATRIX_CENTRE_X - x), strip.GetPixelColor(XY(x, y)));
+            CopyPixelColor(MATRIX_CENTRE_Y - y, MATRIX_CENTRE_X - x, x, y);
         }
     }
 }
@@ -226,7 +229,7 @@ void LedMatrix::Caleidoscope5()
     {
         for (int y = 0; y <= x; y++)
         {
-            strip.SetPixelColor(XY(x, y), strip.GetPixelColor(XY(y, x)));
+            CopyPixelColor(x, y, y, x);
         }
     }
 
@@ -234,7 +237,7 @@ void LedMatrix::Caleidoscope5()
     {
         for (int y = MATRIX_HEIGHT / 4; y >= 0; y--)
         {
-            strip.SetPixelColor(XY(x, y), strip.GetPixelColor(XY(y, x)));
+            CopyPixelColor(x, y, y, x);
         }
     }
 }
@@ -243,31 +246,31 @@ void LedMatrix::Caleidoscope6()
 {
     for (int x = 1; x < MATRIX_CENTER_X; x++)
     {
-        strip.SetPixelColor(XY(7 - x, 7), strip.GetPixelColor(XY(x, 0)));
+        CopyPixelColor(7 - x, 7, x, 0);
     } //a
     for (int x = 2; x < MATRIX_CENTER_X; x++)
     {
-        strip.SetPixelColor(XY(7 - x, 6), strip.GetPixelColor(XY(x, 1)));
+        CopyPixelColor(7 - x, 6, x, 1);
     } //b
     for (int x = 3; x < MATRIX_CENTER_X; x++)
     {
-        strip.SetPixelColor(XY(7 - x, 5), strip.GetPixelColor(XY(x, 2)));
+        CopyPixelColor(7 - x, 5, x, 2);
     } //c
     for (int x = 4; x < MATRIX_CENTER_X; x++)
     {
-        strip.SetPixelColor(XY(7 - x, 4), strip.GetPixelColor(XY(x, 3)));
+        CopyPixelColor(7 - x, 4, x, 3);
     } //d
     for (int x = 5; x < MATRIX_CENTER_X; x++)
     {
-        strip.SetPixelColor(XY(7 - x, 3), strip.GetPixelColor(XY(x, 4)));
+        CopyPixelColor(7 - x, 3, x, 4);
     } //e
     for (int x = 6; x < MATRIX_CENTER_X; x++)
     {
-        strip.SetPixelColor(XY(7 - x, 2), strip.GetPixelColor(XY(x, 5)));
+        CopyPixelColor(7 - x, 2, x, 5);
     } //f
     for (int x = 7; x < MATRIX_CENTER_X; x++)
     {
-        strip.SetPixelColor(XY(7 - x, 1), strip.GetPixelColor(XY(x, 6)));
+        CopyPixelColor(7 - x, 1, x, 6);
     } //g
 }
 
@@ -360,4 +363,156 @@ void Expand(int centerX, int centerY, int radius, byte dimm)
 
     //     currentRadius--;
     // }
+}
+
+// give it a linear tail to the right
+void LedMatrix::StreamRight(byte scale, int fromX, int toX, int fromY, int toY)
+{
+    for (int x = fromX + 1; x < toX; x++)
+    {
+        for (int y = fromY; y < toY; y++)
+        {
+            CopyPixelColor(x, y, x - 1, y, scale);
+        }
+    }
+    for (int y = fromY; y < toY; y++)
+        DimPixelColor(0, y, scale);
+}
+
+// give it a linear tail to the left
+void LedMatrix::StreamLeft(byte scale, int fromX, int toX, int fromY, int toY)
+{
+    for (int x = toX; x < fromX; x++)
+    {
+        for (int y = fromY; y < toY; y++)
+        {
+            CopyPixelColor(x, y, x + 1, y, scale);
+        }
+    }
+    for (int y = fromY; y < toY; y++)
+        DimPixelColor(0, y, scale);
+}
+
+// give it a linear tail downwards
+void LedMatrix::StreamDown(byte scale)
+{
+    for (int x = 0; x < MATRIX_WIDTH; x++)
+    {
+        for (int y = 1; y < MATRIX_HEIGHT; y++)
+        {
+            CopyPixelColor(x, y, x, y - 1, scale);
+        }
+    }
+    for (int x = 0; x < MATRIX_WIDTH; x++)
+        DimPixelColor(x, 0, scale);
+}
+
+// give it a linear tail upwards
+void LedMatrix::StreamUp(byte scale)
+{
+    for (int x = 0; x < MATRIX_WIDTH; x++)
+    {
+        for (int y = MATRIX_HEIGHT - 2; y >= 0; y--)
+        {
+            CopyPixelColor(x, y, x, y + 1, scale);
+        }
+    }
+    for (int x = 0; x < MATRIX_WIDTH; x++)
+        DimPixelColor(x, MATRIX_HEIGHT - 1, scale);
+}
+
+// give it a linear tail up and to the left
+void LedMatrix::StreamUpAndLeft(byte scale)
+{
+    for (int x = 0; x < MATRIX_WIDTH - 1; x++)
+    {
+        for (int y = MATRIX_HEIGHT - 2; y >= 0; y--)
+        {
+            CopyPixelColor(x, y, x + 1, y + 1, scale);
+        }
+    }
+    for (int x = 0; x < MATRIX_WIDTH; x++)
+        DimPixelColor(x, MATRIX_HEIGHT - 1, scale);
+    for (int y = 0; y < MATRIX_HEIGHT; y++)
+        DimPixelColor(MATRIX_WIDTH - 1, y, scale);
+}
+
+// give it a linear tail up and to the right
+void LedMatrix::StreamUpAndRight(byte scale)
+{
+    for (int x = 0; x < MATRIX_WIDTH - 1; x++)
+    {
+        for (int y = MATRIX_HEIGHT - 2; y >= 0; y--)
+        {
+            CopyPixelColor(x + 1, y, x, y + 1, scale);
+        }
+    }
+    // fade the bottom row
+    for (int x = 0; x < MATRIX_WIDTH; x++)
+        DimPixelColor(x, MATRIX_HEIGHT - 1, scale);
+
+    // fade the right column
+    for (int y = 0; y < MATRIX_HEIGHT; y++)
+        DimPixelColor(MATRIX_WIDTH - 1, y, scale);
+}
+
+// just move everything one line down
+void LedMatrix::MoveDown()
+{
+    for (int y = MATRIX_HEIGHT - 1; y > 0; y--)
+    {
+        for (int x = 0; x < MATRIX_WIDTH; x++)
+        {
+            CopyPixelColor(x, y, x, y - 1);
+        }
+    }
+}
+
+// just move everything one line down
+void LedMatrix::VerticalMoveFrom(int start, int end)
+{
+    for (int y = end; y > start; y--)
+    {
+        for (int x = 0; x < MATRIX_WIDTH; x++)
+        {
+            CopyPixelColor(x, y, x, y - 1);
+        }
+    }
+}
+
+// copy the rectangle defined with 2 points x0, y0, xDst, yDst
+// to the rectangle beginning at xSrc, x3
+void LedMatrix::Copy(byte x0, byte y0, byte xDst, byte yDst, byte xSrc, byte ySrc)
+{
+    for (int y = y0; y < yDst + 1; y++)
+    {
+        for (int x = x0; x < xDst + 1; x++)
+        {
+            CopyPixelColor(x + xSrc - x0, y + ySrc - y0, x, y);
+        }
+    }
+}
+
+// rotate + copy triangle (MATRIX_CENTER_X*MATRIX_CENTER_X)
+void LedMatrix::RotateTriangle()
+{
+    for (int x = 1; x < MATRIX_CENTER_X; x++)
+    {
+        for (int y = 0; y < x; y++)
+        {
+            CopyPixelColor(x, 4 - y, 4 - x, y);
+        }
+    }
+}
+
+// mirror + copy triangle (MATRIX_CENTER_X*MATRIX_CENTER_X)
+void LedMatrix::MirrorTriangle()
+{
+    for (int x = 1; x < MATRIX_CENTER_X; x++)
+    {
+        for (int y = 0; y < x; y++)
+        {
+            CopyPixelColor(4 - y, x, 4 - x, y);
+        }
+    }
 }

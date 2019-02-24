@@ -37,8 +37,13 @@ class LedMatrix
     void Setup();
 
     void Show();
+    void SetBrightness(uint8_t value);
 
     void SetPixelColor(int16_t x, int16_t y, RgbColor color);
+    void SwapPixelColor(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
+    void DimPixelColor(int16_t x, int16_t y, byte value);
+    void CopyPixelColor(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
+    void CopyPixelColor(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t scale);
 
     void FillScreen(RgbColor color);
     void DimAll(byte value);
@@ -68,6 +73,18 @@ class LedMatrix
 
     // expand everything within a circle
     void Expand(int centerX, int centerY, int radius, byte dimm);
+
+    void StreamRight(byte scale, int fromX = 0, int toX = MATRIX_WIDTH, int fromY = 0, int toY = MATRIX_HEIGHT);
+    void StreamLeft(byte scale, int fromX = MATRIX_WIDTH, int toX = 0, int fromY = 0, int toY = MATRIX_HEIGHT);
+    void StreamDown(byte scale);
+    void StreamUp(byte scale);
+    void StreamUpAndLeft(byte scale);
+    void StreamUpAndRight(byte scale);
+    void MoveDown();
+    void VerticalMoveFrom(int start, int end);
+    void Copy(byte x0, byte y0, byte x1, byte y1, byte x2, byte y2);
+    void RotateTriangle();
+    void MirrorTriangle();
 
     RgbColor ColorFromCurrentPalette(uint8_t index, uint8_t brightness = 255);
 };

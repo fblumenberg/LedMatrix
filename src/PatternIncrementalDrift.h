@@ -36,7 +36,7 @@ class PatternIncrementalDrift : public Drawable {
     }
 
     unsigned int DrawFrame() {
-      uint8_t dim = beatsin8(2, 5, 10);
+      uint8_t dim = beatsin8(2, 230, 250);
       matrix.DimAll(dim);
 
       for (int i = 2; i <= MATRIX_WIDTH / 2; i++)
